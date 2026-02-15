@@ -19,8 +19,8 @@ def salva_dati(tipo, ant, post, psi_a, psi_p):
     df = pd.read_csv(FILE_DATI)
     
     # Calcoli automatici
-    perc_ant = round(ant / MAX_ANT, 2)
-    perc_post = round(post / MAX_POST, 2)
+    perc_ant = round((ant / MAX_ANT) * 100, 2)
+    perc_post = round((post / MAX_POST) * 100, 2)
     delta = round(perc_ant - perc_post, 3)
     
     # Logica di bilanciamento (tolleranza 0.05)
@@ -66,4 +66,5 @@ with st.container():
 st.divider()
 st.subheader("Storico Ultime Uscite")
 df_visualizza = pd.read_csv(FILE_DATI)
+
 st.dataframe(df_visualizza.tail(10), use_container_width=True)
