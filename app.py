@@ -8,7 +8,7 @@ st.set_page_config(page_title="Suspension Tuner", layout="centered")
 # Costanti basate sui tuoi riferimenti
 MAX_ANT = 100
 MAX_POST = 40
-FILE_DATI = "dati_sospensioni.csv"
+FILE_DATI = "Escursione sospensioni NEW.xlsx"
 
 # Inizializzazione del database (se non esiste, lo crea)
 if not os.path.exists(FILE_DATI):
@@ -68,3 +68,4 @@ st.subheader("Storico Ultime Uscite")
 df_visualizza = pd.read_csv(FILE_DATI)
 
 st.dataframe(df_visualizza.tail(10), use_container_width=True)
+
