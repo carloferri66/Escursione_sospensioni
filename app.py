@@ -1,73 +1,55 @@
 import streamlit as st
+from streamlit_gsheets import GSheetsConnection
 import pandas as pd
-import os
 
-# Configurazione grafica per mobile
-st.set_page_config(page_title="Suspension Tuner", layout="centered")
+st.set_page_config(page_title="Suspension Cloud Log", layout="centered")
 
-# Costanti basate sui tuoi riferimenti
-MAX_ANT = 100
-MAX_POST = 40
-FILE_DATI = "dati_sospensioni.csv"
+st.title("🚵‍♂️ Registro Sospensioni Cloud")
 
-# Inizializzazione del database (se non esiste, lo crea)
-if not os.path.exists(FILE_DATI):
-    df_vuoto = pd.DataFrame(columns=['Tipo percorso', 'Escursione Ant', '%', 'Escursione Post', '% ', 'Delta', 'Bilanciato', 'PSI - A', 'PSI - P'])
-    df_vuoto.to_csv(FILE_DATI, index=False)
+# 1. Creiamo la connessione con Google Sheets
+conn = st.connection("gsheets", type=GSheetsConnection)
 
-def salva_dati(tipo, ant, post, psi_a, psi_p):
-    df = pd.read_csv(FILE_DATI)
+# 2. Leggiamo i dati (questa funzione legge sempre l'ultima versione online)
+try:
+    df = conn.read(worksheet="120 - 210")
+except Exception as e:
+    st.error("Errore di connessione al foglio Google. Controlla i Secrets!")
+    st.stop()
+
+# 3. Interfaccia di inserimento
+with st.sidebar:
+    st.header("Nuova Uscita")
+    tipo = st.selectbox("Percorso", ["Gara", "Gara fango", "Pietraia", "Sterrato", "Asfalto", "Sterrato Soft"])
+    ant = st.number_input("Escursione Ant (mm)", 0, 100, 80)
+    psi_a = st.number_input("PSI Ant", 0, 150, 100)
+    post = st.number_input("Escursione Post (mm)", 0, 40, 25)
+    psi_p = st.number_input("PSI Post", 0, 300, 190)
     
-    # Calcoli automatici
-    perc_ant = round((ant / MAX_ANT) * 100, 2)
-    perc_post = round((post / MAX_POST) * 100, 2)
-    delta = round(perc_ant - perc_post, 3)
+    salva = st.button("SALVA PERMANENTEMENTE")
+
+if salva:
+    # Calcoli logici
+    p_ant = round((ant / 100) * 100, 2)
+    p_post = round((post / 40), * 100 2)
+    diff = round(p_ant - p_post, 3)
+    bilancio = "OK" if abs(diff) <= 0.05 else ("ANT" if diff > 0 else "POST")
     
-    # Logica di bilanciamento (tolleranza 0.05)
-    if abs(delta) <= 0.05:
-        bilancio = "OK"
-    elif delta > 0:
-        bilancio = "ANT"
-    else:
-        bilancio = "POST"
-        
-    nuova_riga = {
-        'Tipo percorso': tipo, 'Escursione Ant': ant, '%': perc_ant,
-        'Escursione Post': post, '% ': perc_post, 'Delta': delta,
-        'Bilanciato': bilancio, 'PSI - A': psi_a, 'PSI - P': psi_p
-    }
+    # Prepariamo la nuova riga
+    nuova_riga = pd.DataFrame([{
+        "Tipo percorso": tipo, "Escursione Ant": ant, "%": p_ant,
+        "Escursione Post": post, "% ": p_post, "Delta": diff,
+        "Bilanciato": bilancio, "PSI - A": psi_a, "PSI - P": psi_p
+    }])
     
-    df = pd.concat([df, pd.DataFrame([nuova_riga])], ignore_index=True)
-    df.to_csv(FILE_DATI, index=False)
-    return bilancio
-
-# --- INTERFACCIA UTENTE ---
-st.title("🚵‍♂️ Setup Sospensioni")
-st.write("Registra i dati della tua uscita:")
-
-with st.container():
-    tipo = st.selectbox("Percorso", ["Gara", "Gara fango", "Pietraia", "Sterrato", "Sterrato Soft", "Asfalto"])
+    # Uniamo i vecchi dati con la nuova riga
+    df_aggiornato = pd.concat([df, nuova_riga], ignore_index=True)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        st.subheader("Anteriore")
-        ant = st.number_input("Escursione (mm)", 0, 100, 80)
-        psi_a = st.number_input("Pressione (PSI)", 0, 150, 100, key="psi_a")
-        
-    with col2:
-        st.subheader("Posteriore")
-        post = st.number_input("Escursione (mm) ", 0, 40, 25)
-        psi_p = st.number_input("Pressione (PSI) ", 0, 300, 190, key="psi_p")
+    # 4. AGGIORNAMENTO ONLINE: Questa riga salva i dati per sempre
+    conn.update(worksheet="120 - 210", data=df_aggiornato)
+    
+    st.success(f"Dati salvati su Google Sheets! Setup: {bilancio}")
+    st.balloons()
 
-    if st.button("SALVA REGISTRAZIONE", use_container_width=True):
-        risultato = salva_dati(tipo, ant, post, psi_a, psi_p)
-        st.success(f"Dati salvati! Setup: **{risultato}**")
-
-st.divider()
-st.subheader("Storico Ultime Uscite")
-df_visualizza = pd.read_csv(FILE_DATI)
-
-st.dataframe(df_visualizza.tail(10), use_container_width=True)
-
-
-
+# 5. Visualizzazione (aggiornata in tempo reale)
+st.subheader("Storico Registrazioni (Cloud)")
+st.dataframe(df.tail(15), use_container_width=True)
