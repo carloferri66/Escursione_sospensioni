@@ -10,15 +10,22 @@ LOGO_URL = "https://raw.githubusercontent.com/tuo-username/tuo-repo/main/logo.pn
 
 st.set_page_config(page_title="MTB Setup Pro", layout="centered", page_icon="🚵‍♂️")
 
-# --- LOGO E TITOLO ---
-# Sostituisci questo URL con il link diretto alla tua immagine MyEbike
-URL_LOGO = "https://i.postimg.cc/85M6Xm90/logo-ebike.png" 
+# --- INIZIO FILE (LOGO) ---
+# Sostituisci l'URL qui sotto con il link 'Raw' di GitHub dopo aver caricato il logo
+URL_LOGO = "https://raw.githubusercontent.com/TUO_UTENTE/TUA_REPO/main/LOGO.jpg" 
 
-col1, col2 = st.columns([1, 4])
+col1, col2 = st.columns([1, 3])
 with col1:
-    st.image(URL_LOGO, width=80) 
+    # Se il link sopra non è ancora pronto, puoi usare un'icona locale o riprovare
+    try:
+        st.image(URL_LOGO, width=120)
+    except:
+        st.write("🚲 **MyEbike**") # Testo di riserva se il logo non carica
+
 with col2:
     st.title("Registro Sospensioni Pro")
+# --------------------------
+
 
 # --- SEZIONE 1: INSERIMENTO DATI (Sidebar) ---
 with st.sidebar:
@@ -72,37 +79,37 @@ try:
 
     st.dataframe(df_filtrato.iloc[::-1], use_container_width=True, height=200)
 
-    # --- GRAFICO A LINEA CON PUNTI COLORATI ---
-    st.write("### Evoluzione Bilanciamento (Delta)")
-    if 'Delta' in df_filtrato.columns and 'Data' in df_filtrato.columns:
-        
-        # 1. Creiamo la linea
-        linea = alt.Chart(df_filtrato).mark_line(color="#555555", strokeWidth=2).encode(
-            x='Data:T',
-            y='Delta:Q'
-        )
+# --- GRAFICO A LINEE CON PUNTI ---
+st.write("### Evoluzione Bilanciamento (Delta)")
+if 'Delta' in df_filtrato.columns and 'Data' in df_filtrato.columns:
+    
+    # Base comune per i dati
+    base = alt.Chart(df_filtrato).encode(
+        x=alt.X('Data:T', title='Data Uscita'),
+        y=alt.Y('Delta:Q', title='Delta (Bilanciamento)')
+    )
 
-        # 2. Creiamo i punti con colore condizionale
-        punti = alt.Chart(df_filtrato).mark_circle(size=100, opacity=1).encode(
-            x='Data:T',
-            y='Delta:Q',
-            color=alt.condition(
-                "abs(datum.Delta) <= 0.05",
-                alt.value("#29b09d"),  # Verde se OK
-                alt.value("#ff4b4b")   # Rosso se fuori range
-            ),
-            tooltip=['Data', 'Delta', 'Tipo percorso']
-        )
+    # 1. La linea di tendenza (grigia sottile)
+    linea = base.mark_line(color="#888888", strokeWidth=1.5, opacity=0.7)
 
-       # 3. Linea dello zero per riferimento
-        linea_zero = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='white', strokeDash=[5,5]).encode(y='y')
+    # 2. I punti colorati (Verde se OK, Rosso se fuori range)
+    punti = base.mark_circle(size=100, opacity=1).encode(
+        color=alt.condition(
+            "abs(datum.Delta) <= 0.05",
+            alt.value("#29b09d"),  # Verde (Range ottimale)
+            alt.value("#ff4b4b")   # Rosso (Sbilanciato)
+        ),
+        tooltip=['Data', 'Delta', 'Tipo percorso']
+    )
 
-        # Combiniamo tutto
-        grafico_finale = (linea + punti + linea_zero).properties(height=300)
-        
-        st.altair_chart(grafico_finale, use_container_width=True)
-        st.caption("📈 Punti Verdi = Setup Bilanciato | Punti Rossi = Da rivedere")
+    # 3. Linea di riferimento Zero (Perfetto)
+    zero_line = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='white', strokeDash=[3,3]).encode(y='y')
+
+    # Uniamo i livelli
+    st.altair_chart((linea + punti + zero_line).properties(height=350), use_container_width=True)
+    st.caption("📈 La linea unisce le tue uscite. Punti verdi: setup bilanciato | Punti rossi: setup da correggere.")
 
 except Exception as e:
     st.info(f"In attesa di dati... {e}")
+
 
