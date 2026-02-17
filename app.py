@@ -11,7 +11,7 @@ conn = st.connection("gsheets", type=GSheetsConnection)
 
 # 2. Leggiamo i dati (questa funzione legge sempre l'ultima versione online)
 try:
-    df = conn.read(worksheet="120 - 210")
+    df = conn.read()
 except Exception as e:
     st.error("Errore di connessione al foglio Google. Controlla i Secrets!")
     st.stop()
@@ -53,4 +53,5 @@ if salva:
 # 5. Visualizzazione (aggiornata in tempo reale)
 st.subheader("Storico Registrazioni (Cloud)")
 st.dataframe(df.tail(15), use_container_width=True)
+
 
