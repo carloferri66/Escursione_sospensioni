@@ -8,16 +8,15 @@ URL_LETTURA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFgpcODvT-wUcvQX
 URL_SCRITTURA = "https://script.google.com/macros/s/AKfycbzBUn67Nv4-GVNmmsEsrVjdQINKSM0be2Ae2pY3jleXu79IE4krgDgSlwj1X4cWUMIq7w/exec"
 LOGO_URL = "https://raw.githubusercontent.com/tuo-username/tuo-repo/main/logo.png" # O il link diretto all'immagine
 
-
 st.set_page_config(page_title="MTB Setup Pro", layout="centered", page_icon="🚵‍♂️")
 
 # --- LOGO E TITOLO ---
-# Se hai il link del tuo logo, sostituisci URL_LOGO qui sotto
-URL_LOGO = "https://cdn-icons-png.flaticon.com/512/3112/3112933.png" # Esempio icona MTB
+# Sostituisci questo URL con il link diretto alla tua immagine MyEbike
+URL_LOGO = "https://i.postimg.cc/85M6Xm90/logo-ebike.png" 
 
 col1, col2 = st.columns([1, 4])
 with col1:
-    st.image(URL_LOGO, width=70) 
+    st.image(URL_LOGO, width=80) 
 with col2:
     st.title("Registro Sospensioni Pro")
 
@@ -59,12 +58,11 @@ def carica_dati(url):
 try:
     df_originale = carica_dati(f"{URL_LETTURA}&nocache={pd.Timestamp.now().timestamp()}")
     
-    # Filtro
     opzioni_percorso = ["Tutti"] + list(df_originale['Tipo percorso'].unique())
     scelta_percorso = st.selectbox("Analizza storico per tipo percorso:", opzioni_percorso)
     df_filtrato = df_originale if scelta_percorso == "Tutti" else df_originale[df_originale['Tipo percorso'] == scelta_percorso]
 
-    # KPI a colori
+    # KPI
     if not df_filtrato.empty:
         ultimo_delta = df_filtrato['Delta'].iloc[-1]
         if abs(ultimo_delta) <= 0.03: label, colore = "PERFETTO 🎯", "normal"
@@ -72,29 +70,29 @@ try:
         else: label, colore = "SBILANCIATO 🚨", "inverse"
         st.metric(label=label, value=f"{ultimo_delta:.3f}", delta=scelta_percorso, delta_color=colore)
 
-    # Tabella
     st.dataframe(df_filtrato.iloc[::-1], use_container_width=True, height=200)
 
-    # --- GRAFICO CORRETTO ---
-    st.write("### Analisi Grafica Delta")
+    # --- GRAFICO A LINEA CON PUNTI COLORATI ---
+    st.write("### Evoluzione Bilanciamento (Delta)")
     if 'Delta' in df_filtrato.columns and 'Data' in df_filtrato.columns:
-        # Usiamo una condizione singola più robusta per i colori
-        chart = alt.Chart(df_filtrato).mark_bar().encode(
+        
+        # 1. Creiamo la linea
+        linea = alt.Chart(df_filtrato).mark_line(color="#555555", strokeWidth=2).encode(
+            x='Data:T',
+            y='Delta:Q'
+        )
+
+        # 2. Creiamo i punti con colore condizionale
+        punti = alt.Chart(df_filtrato).mark_circle(size=100, opacity=1).encode(
             x='Data:T',
             y='Delta:Q',
             color=alt.condition(
                 "abs(datum.Delta) <= 0.05",
-                alt.value("#29b09d"),  # Verde (OK)
-                alt.value("#ff4b4b")   # Rosso (Sbilanciato)
+                alt.value("#29b09d"),  # Verde se OK
+                alt.value("#ff4b4b")   # Rosso se fuori range
             ),
             tooltip=['Data', 'Delta', 'Tipo percorso']
-        ).properties(height=300)
-        
-        # Linea dello zero per riferimento
-        linea_zero = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='grey').encode(y='y')
-        
-        st.altair_chart(chart + linea_zero, use_container_width=True)
-        st.caption("🟢 Verde = Entro tolleranza (±0.05) | 🔴 Rosso = Fuori tolleranza")
+        )
 
-except Exception as e:
-    st.info(f"In attesa di dati... {e}")
+        # 3. Linea dello zero per riferimento
+        linea_zero = alt.Chart(pd.DataFrame
