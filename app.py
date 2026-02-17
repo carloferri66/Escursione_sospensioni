@@ -77,26 +77,27 @@ try:
     st.subheader("Analisi Bilanciamento (Delta)")
     
     if 'Delta' in df.columns and 'Data' in df.columns:
-        # Prepariamo i dati
         chart_data = df[['Data', 'Delta']].copy()
         
-        # --- PULIZIA DATI (MOLTO IMPORTANTE) ---
-        # 1. Convertiamo tutto in stringa per poter manipolare i caratteri
+        # --- PULIZIA DATI ETEROGENEI ---
+        # 1. Convertiamo in stringa
         chart_data['Delta'] = chart_data['Delta'].astype(str)
-        # 2. Sostituiamo la virgola con il punto (fondamentale per Google Sheets in italiano)
-        chart_data['Delta'] = chart_data['Delta'].str.replace(',', '.')
-        # 3. Trasformiamo finalmente in numero vero
+        # 2. Rimuoviamo il simbolo % se presente
+        chart_data['Delta'] = chart_data['Delta'].str.replace('%', '', regex=False)
+        # 3. Sostituiamo la virgola con il punto
+        chart_data['Delta'] = chart_data['Delta'].str.replace(',', '.', regex=False)
+        # 4. Trasformiamo in numero
         chart_data['Delta'] = pd.to_numeric(chart_data['Delta'], errors='coerce')
         
-        # Eliminiamo righe vuote o con errori (es. scritte invece di numeri)
+        # Rimuoviamo eventuali righe che non è stato possibile convertire
         chart_data = chart_data.dropna(subset=['Delta'])
         
         # Disegniamo il grafico
         if not chart_data.empty:
-            st.area_chart(chart_data.set_index('Data'), use_container_width=True)
-            st.caption("💡 Sopra lo 0 = Ant più rigido | Sotto lo 0 = Post più rigido")
+            st.line_chart(chart_data.set_index('Data'), use_container_width=True)
+            st.caption("💡 Grafico del Delta (Bilanciamento). Più sei vicino allo 0, più il setup è neutro.")
         else:
-            st.warning("⚠️ I dati nella colonna Delta non sembrano numeri validi.")
+            st.warning("⚠️ Non riesco a convertire i dati della colonna Delta in numeri.")
     else:
         st.warning("⚠️ Colonne Data o Delta non trovate.")
 
@@ -104,3 +105,4 @@ except Exception as e:
     # Questo ti mostrerà il messaggio standard, 
     # ma aggiungiamo 'e' per vedere l'errore tecnico se qualcosa va storto
     st.info(f"In attesa di dati per generare il grafico... (Info: {e})")
+
