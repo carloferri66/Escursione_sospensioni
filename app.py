@@ -76,16 +76,31 @@ try:
     st.divider()
     st.subheader("Analisi Bilanciamento (Delta)")
     
-    # Prepariamo i dati per il grafico
-    # Usiamo la colonna Delta e come indice la DATA
-    if 'Delta' in df.columns and 'DATA' in df.columns:
-        chart_data = df[['DATA', 'Delta']].copy()
+    # Rendiamo i nomi delle colonne tutti minuscoli per non sbagliare
+    df.columns = [c.strip() for c in df.columns] # Toglie spazi vuoti rari
+    
+    # Cerchiamo la colonna Delta (provando sia maiuscolo che minuscolo)
+    colonna_delta = None
+    for nome in ['delta', 'Delta', 'DELTA']:
+        if nome in df.columns:
+            colonna_delta = nome
+            break
+            
+    if colonna_delta and 'DATA' in df.columns:
+        # Prepariamo i dati
+        chart_data = df[['DATA', colonna_delta]].copy()
         
-        # Creiamo un grafico ad area o linee
-        # Streamlit permette di scorrere e zoomare con le dita/mouse
+        # Trasformiamo la colonna in numeri (se per caso Google la invia come testo)
+        chart_data[colonna_delta] = pd.to_numeric(chart_data[colonna_delta], errors='coerce')
+        
+        # Disegniamo il grafico
         st.area_chart(chart_data.set_index('DATA'), use_container_width=True)
         
-        st.caption("💡 Se il grafico è vicino alla linea centrale (0), la bici è bilanciata. Punti in alto = Ant più rigido, Punti in basso = Post più rigido.")
-    
+        st.caption("💡 Linea centrale (0) = Bilanciata. Sopra = Anteriore rigido, Sotto = Posteriore rigido.")
+    else:
+        st.warning(f"⚠️ Non trovo la colonna 'delta' nel foglio. Colonne trovate: {list(df.columns)}")
+
 except Exception as e:
-    st.info("In attesa di dati per generare il grafico...")
+    # Questo ti mostrerà il messaggio standard, 
+    # ma aggiungiamo 'e' per vedere l'errore tecnico se qualcosa va storto
+    st.info(f"In attesa di dati per generare il grafico... (Info: {e})")
