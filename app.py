@@ -30,7 +30,7 @@ with st.sidebar:
 if salva:
     # Calcoli logici
     p_ant = round((ant / 100) * 100, 2)
-    p_post = round((post / 40), * 100 2)
+    p_post = round((post / 40), * 100, 2)
     diff = round(p_ant - p_post, 3)
     bilancio = "OK" if abs(diff) <= 0.05 else ("ANT" if diff > 0 else "POST")
     
@@ -53,3 +53,4 @@ if salva:
 # 5. Visualizzazione (aggiornata in tempo reale)
 st.subheader("Storico Registrazioni (Cloud)")
 st.dataframe(df.tail(15), use_container_width=True)
+
