@@ -9,100 +9,91 @@ URL_LETTURA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFgpcODvT-wUcvQX
 # Il link che finisce con .../exec
 URL_SCRITTURA = "https://script.google.com/macros/s/AKfycbzBUn67Nv4-GVNmmsEsrVjdQINKSM0be2Ae2pY3jleXu79IE4krgDgSlwj1X4cWUMIq7w/exec"
 
-st.set_page_config(page_title="MTB Setup", layout="centered", page_icon="🚵‍♂️")
 
-st.title("🚵‍♂️ Registro Sospensioni")
+st.set_page_config(page_title="MTB Setup Pro", layout="centered", page_icon="🚵‍♂️")
 
-# --- SEZIONE 1: INSERIMENTO DATI ---
+st.title("🚵‍♂️ Registro Sospensioni Pro")
+
+# --- SEZIONE 1: INSERIMENTO DATI (Sidebar) ---
 with st.sidebar:
-    st.header("Nuova Uscita")
+    st.header("Nuova Registrazione")
     with st.form("dati_sospensioni", clear_on_submit=True):
         tipo = st.selectbox("Percorso", ["Gara", "Gara fango", "Pietraia", "Sterrato", "Asfalto", "Sterrato Soft"])
         ant = st.number_input("Escursione Ant (mm)", 0, 100, 85)
         psi_a = st.number_input("PSI Ant", 0, 150, 100)
         post = st.number_input("Escursione Post (mm)", 0, 40, 28)
         psi_p = st.number_input("PSI Post", 0, 300, 190)
-        
         submit = st.form_submit_button("SALVA SUL CLOUD")
 
 if submit:
-    # Calcoli logici (così non devi farli tu a mano)
-    p_ant = round((ant / 100) * 100, 2)
-    p_post = round((post / 40) * 100, 2)
+    p_ant = round(ant / 100, 2)
+    p_post = round(post / 40, 2)
     delta = round(p_ant - p_post, 3)
     bilancio = "OK" if abs(delta) <= 0.05 else ("ANT" if delta > 0 else "POST")
     
-    # Parametri da inviare al "Postino" Apps Script
-    payload = {
-        "tipo": tipo, "ant": ant, "p_ant": p_ant, 
-        "post": post, "p_post": p_post, "delta": delta, 
-        "bilancio": bilancio, "psi_a": psi_a, "psi_p": psi_p
-    }
-    
-    # Invio effettivo
+    payload = {"tipo": tipo, "ant": ant, "p_ant": p_ant, "post": post, "p_post": p_post, "delta": delta, "bilancio": bilancio, "psi_a": psi_a, "psi_p": psi_p}
     try:
         r = requests.get(URL_SCRITTURA, params=payload)
         if r.status_code == 200:
-            st.success(f"✅ Salvataggio riuscito! Setup: {bilancio}")
+            st.success(f"✅ Salvato! Setup: {bilancio}")
             st.balloons()
-            # Puliamo la cache per vedere subito i nuovi dati nella tabella
             st.cache_data.clear()
         else:
-            st.error("❌ Errore durante il salvataggio. Verifica l'URL di scrittura.")
+            st.error("❌ Errore di scrittura.")
     except Exception as e:
-        st.error(f"Errore di connessione: {e}")
-# --- SEZIONE 2: STORICO DATI ---
-st.subheader("Storico Registrazioni Completo")
+        st.error(f"Errore: {e}")
 
+# --- SEZIONE 2: FILTRO E VISUALIZZAZIONE ---
 @st.cache_data(ttl=60)
 def carica_dati(url):
-    # Leggiamo tutto il file
-    return pd.read_csv(url)
+    df = pd.read_csv(url)
+    # Pulizia nomi colonne
+    df.columns = [c.strip() for c in df.columns]
+    # Pulizia Delta (gestione virgole e simboli)
+    if 'Delta' in df.columns:
+        df['Delta'] = df['Delta'].astype(str).str.replace('%', '').str.replace(',', '.')
+        df['Delta'] = pd.to_numeric(df['Delta'], errors='coerce')
+    return df
 
 try:
-    # Carichiamo i dati
-    df = carica_dati(f"{URL_LETTURA}&nocache={pd.Timestamp.now().timestamp()}")
+    df_originale = carica_dati(f"{URL_LETTURA}&nocache={pd.Timestamp.now().timestamp()}")
     
-    # 1. Ordiniamo i dati per mostrare i più recenti in alto (facoltativo ma comodo)
-    # Se la colonna si chiama DATA, mettiamo l'ultima inserita per prima
-    df_visualizzazione = df.iloc[::-1] 
+    # --- PUNTO 2: FILTRO PERCORSO ---
+    st.subheader("Filtra per Terreno")
+    opzioni_percorso = ["Tutti"] + list(df_originale['Tipo percorso'].unique())
+    scelta_percorso = st.selectbox("Seleziona tipo di percorso per analizzare lo storico:", opzioni_percorso)
     
-    # 2. Mostriamo la tabella COMPLETA
-    # Togliamo .tail(10) così carichiamo tutto. 
-    # Streamlit aggiungerà automaticamente la barra di scorrimento.
-    st.dataframe(df_visualizzazione, use_container_width=True, height=400)
-    
-# --- SEZIONE 3: GRAFICO BILANCIAMENTO ---
-    st.divider()
-    st.subheader("Analisi Bilanciamento (Delta)")
-    
-    if 'Delta' in df.columns and 'Data' in df.columns:
-        chart_data = df[['Data', 'Delta']].copy()
-        
-        # --- PULIZIA DATI ETEROGENEI ---
-        # 1. Convertiamo in stringa
-        chart_data['Delta'] = chart_data['Delta'].astype(str)
-        # 2. Rimuoviamo il simbolo % se presente
-        chart_data['Delta'] = chart_data['Delta'].str.replace('%', '', regex=False)
-        # 3. Sostituiamo la virgola con il punto
-        chart_data['Delta'] = chart_data['Delta'].str.replace(',', '.', regex=False)
-        # 4. Trasformiamo in numero
-        chart_data['Delta'] = pd.to_numeric(chart_data['Delta'], errors='coerce')
-        
-        # Rimuoviamo eventuali righe che non è stato possibile convertire
-        chart_data = chart_data.dropna(subset=['Delta'])
-        
-        # Disegniamo il grafico
-        if not chart_data.empty:
-            st.line_chart(chart_data.set_index('Data'), use_container_width=True)
-            st.caption("💡 Grafico del Delta (Bilanciamento). Più sei vicino allo 0, più il setup è neutro.")
-        else:
-            st.warning("⚠️ Non riesco a convertire i dati della colonna Delta in numeri.")
+    if scelta_percorso == "Tutti":
+        df_filtrato = df_originale
     else:
-        st.warning("⚠️ Colonne Data o Delta non trovate.")
+        df_filtrato = df_originale[df_originale['Tipo percorso'] == scelta_percorso]
+
+    # --- PUNTO 3: COLORI BILANCIAMENTO (KPI) ---
+    if not df_filtrato.empty:
+        ultimo_delta = df_filtrato['Delta'].iloc[-1]
+        
+        # Logica Colori
+        if abs(ultimo_delta) <= 0.03:
+            colore = "normal"
+            label = "PERFETTO 🎯"
+        elif abs(ultimo_delta) <= 0.06:
+            colore = "off"
+            label = "ACCETTABILE ⚠️"
+        else:
+            colore = "inverse"
+            label = "SBILANCIATO 🚨"
+
+        st.metric(label="Stato Ultimo Bilanciamento", value=ultimo_delta, delta=f"{scelta_percorso}", delta_color=colore)
+
+    # Tabella Storico (Invertita per vedere i recenti in alto)
+    st.write("### Storico Dati")
+    st.dataframe(df_filtrato.iloc[::-1], use_container_width=True, height=300)
+
+    # --- GRAFICO ANALISI ---
+    st.write("### Grafico Evoluzione Delta")
+    if 'Delta' in df_filtrato.columns and 'Data' in df_filtrato.columns:
+        chart_data = df_filtrato[['Data', 'Delta']].dropna()
+        st.line_chart(chart_data.set_index('Data'))
 
 except Exception as e:
-    # Questo ti mostrerà il messaggio standard, 
-    # ma aggiungiamo 'e' per vedere l'errore tecnico se qualcosa va storto
-    st.info(f"In attesa di dati per generare il grafico... (Info: {e})")
-
+    st.info(f"In attesa di dati... ({e})")
