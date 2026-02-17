@@ -1,17 +1,73 @@
 import streamlit as st
 import pandas as pd
+import requests
 
-st.title("Test di Connessione Rapida 🚵‍♂️")
+# --- CONFIGURAZIONE (INCOLLA I TUOI LINK QUI SOTTO) ---
+# Il link che finisce con ...output=csv
+URL_LETTURA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFgpcODvT-wUcvQX4zVWe_8GtDbpPL8DL3wbc-KPObAJZmgdc5vwpNT694VZGi4LY8iIhJD4YIqWWd/pub?output=csv"
 
-# INCOLLA QUI IL LINK CHE HAI COPIATO DOPO AVER PUBBLICATO SUL WEB
-URL_PUBBLICO = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQWs2Kdjudkb5H16vvEFDuZ7BA4Nmh7oowDZy29W1JFfExJM5BhZwHDQsjoKU82mQ/pub?output=csv"
+# Il link che finisce con .../exec
+URL_SCRITTURA = "https://script.google.com/macros/s/AKfycbzBUn67Nv4-GVNmmsEsrVjdQINKSM0be2Ae2pY3jleXu79IE4krgDgSlwj1X4cWUMIq7w/exec"
+
+st.set_page_config(page_title="MTB Setup", layout="centered", page_icon="🚵‍♂️")
+
+st.title("🚵‍♂️ Registro Sospensioni")
+
+# --- SEZIONE 1: INSERIMENTO DATI ---
+with st.sidebar:
+    st.header("Nuova Uscita")
+    with st.form("dati_sospensioni", clear_on_submit=True):
+        tipo = st.selectbox("Percorso", ["Gara", "Gara fango", "Pietraia", "Sterrato", "Asfalto", "Sterrato Soft"])
+        ant = st.number_input("Escursione Ant (mm)", 0, 100, 85)
+        psi_a = st.number_input("PSI Ant", 0, 150, 100)
+        post = st.number_input("Escursione Post (mm)", 0, 40, 28)
+        psi_p = st.number_input("PSI Post", 0, 300, 190)
+        
+        submit = st.form_submit_button("SALVA SUL CLOUD")
+
+if submit:
+    # Calcoli logici (così non devi farli tu a mano)
+    p_ant = round((ant / 100) * 100, 2)
+    p_post = round((post / 40) * 100, 2)
+    delta = round(p_ant - p_post, 3)
+    bilancio = "OK" if abs(delta) <= 0.05 else ("ANT" if delta > 0 else "POST")
+    
+    # Parametri da inviare al "Postino" Apps Script
+    payload = {
+        "tipo": tipo, "ant": ant, "p_ant": p_ant, 
+        "post": post, "p_post": p_post, "delta": delta, 
+        "bilancio": bilancio, "psi_a": psi_a, "psi_p": psi_p
+    }
+    
+    # Invio effettivo
+    try:
+        r = requests.get(URL_SCRITTURA, params=payload)
+        if r.status_code == 200:
+            st.success(f"✅ Salvataggio riuscito! Setup: {bilancio}")
+            st.balloons()
+            # Puliamo la cache per vedere subito i nuovi dati nella tabella
+            st.cache_data.clear()
+        else:
+            st.error("❌ Errore durante il salvataggio. Verifica l'URL di scrittura.")
+    except Exception as e:
+        st.error(f"Errore di connessione: {e}")
+
+# --- SEZIONE 2: STORICO DATI ---
+st.subheader("Storico Registrazioni")
+
+@st.cache_data(ttl=60) # Aggiorna i dati ogni minuto
+def carica_dati(url):
+    return pd.read_csv(url)
 
 try:
-    # Proviamo a leggere direttamente il CSV dal link pubblico
-    df = pd.read_csv(URL_PUBBLICO)
-    st.success("SÌ! I dati sono stati letti correttamente!")
-    st.dataframe(df.head())
+    # Aggiungiamo un parametro casuale all'URL per evitare che il browser mostri dati vecchi
+    df = carica_dati(f"{URL_LETTURA}&nocache={pd.Timestamp.now().timestamp()}")
+    
+    # Mostra le ultime 10 righe
+    st.dataframe(df.tail(10), use_container_width=True)
+    
+    # Piccolo grafico di riepilogo per fare i fighi
+    st.line_chart(df[['PSI - A', 'PSI - P']].tail(10))
+    
 except Exception as e:
-    st.error(f"Ancora errore: {e}")
-    st.info("Se vedi ancora 404, il link che hai incollato non è corretto o il file non è pubblicato.")
-
+    st.info("In attesa dei primi dati dal foglio Google...")
