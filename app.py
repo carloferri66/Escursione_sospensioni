@@ -6,7 +6,7 @@ import altair as alt
 # --- CONFIGURAZIONE ---
 URL_LETTURA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFgpcODvT-wUcvQX4zVWe_8GtDbpPL8DL3wbc-KPObAJZmgdc5vwpNT694VZGi4LY8iIhJD4YIqWWd/pub?output=csv"
 URL_SCRITTURA = "https://script.google.com/macros/s/AKfycbzBUn67Nv4-GVNmmsEsrVjdQINKSM0be2Ae2pY3jleXu79IE4krgDgSlwj1X4cWUMIq7w/exec"
-LOGO_URL = "https://github.com/carloferri66/Escursione_sospensioni/blob/main/LOGO%20.jpg?raw=true"
+URL_LOGO = "https://github.com/carloferri66/Escursione_sospensioni/blob/main/LOGO%20.jpg?raw=true"
 
 
 st.set_page_config(page_title="MTB Setup Pro", layout="centered", page_icon="🚵‍♂️")
@@ -100,5 +100,6 @@ try:
 
 except Exception as e:
     st.info(f"In attesa di dati... ({e})")
+
 
 
