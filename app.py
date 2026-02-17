@@ -94,5 +94,15 @@ try:
             tooltip=['Data', 'Delta', 'Tipo percorso']
         )
 
-        # 3. Linea dello zero per riferimento
-        linea_zero = alt.Chart(pd.DataFrame
+       # 3. Linea dello zero per riferimento
+        linea_zero = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='white', strokeDash=[5,5]).encode(y='y')
+
+        # Combiniamo tutto
+        grafico_finale = (linea + punti + linea_zero).properties(height=300)
+        
+        st.altair_chart(grafico_finale, use_container_width=True)
+        st.caption("📈 Punti Verdi = Setup Bilanciato | Punti Rossi = Da rivedere")
+
+except Exception as e:
+    st.info(f"In attesa di dati... {e}")
+
