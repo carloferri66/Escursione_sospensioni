@@ -2,19 +2,17 @@ import streamlit as st
 from streamlit_gsheets import GSheetsConnection
 import pandas as pd
 
-st.set_page_config(page_title="Suspension Cloud Log", layout="centered")
+st.title("Test Connessione")
 
-st.title("🚵‍♂️ Registro Sospensioni Cloud")
-
-# 1. Creiamo la connessione con Google Sheets
-conn = st.connection("gsheets", type=GSheetsConnection)
-
-# 2. Leggiamo i dati (questa funzione legge sempre l'ultima versione online)
+# Proviamo a connetterci senza specificare nulla
 try:
-    df = conn.read()
+    conn = st.connection("gsheets", type=GSheetsConnection)
+    # Leggiamo il foglio senza specificare il nome del worksheet (prenderà il primo)
+    df = conn.read() 
+    st.success("Connessione riuscita!")
+    st.write(df.head())
 except Exception as e:
-    st.error("Errore di connessione al foglio Google. Controlla i Secrets!")
-    st.stop()
+    st.error(f"Errore tecnico: {e}")
 
 # 3. Interfaccia di inserimento
 with st.sidebar:
@@ -53,5 +51,6 @@ if salva:
 # 5. Visualizzazione (aggiornata in tempo reale)
 st.subheader("Storico Registrazioni (Cloud)")
 st.dataframe(df.tail(15), use_container_width=True)
+
 
 
