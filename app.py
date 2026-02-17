@@ -76,29 +76,31 @@ try:
     st.divider()
     st.subheader("Analisi Bilanciamento (Delta)")
     
-    # Pulizia nomi colonne per sicurezza
-    df.columns = [c.strip() for c in df.columns]
-            
-    # Usiamo esattamente i nomi che abbiamo visto nel tuo errore
     if 'Delta' in df.columns and 'Data' in df.columns:
         # Prepariamo i dati
         chart_data = df[['Data', 'Delta']].copy()
         
-        # Forziamo il Delta a essere un numero (importante!)
+        # --- PULIZIA DATI (MOLTO IMPORTANTE) ---
+        # 1. Convertiamo tutto in stringa per poter manipolare i caratteri
+        chart_data['Delta'] = chart_data['Delta'].astype(str)
+        # 2. Sostituiamo la virgola con il punto (fondamentale per Google Sheets in italiano)
+        chart_data['Delta'] = chart_data['Delta'].str.replace(',', '.')
+        # 3. Trasformiamo finalmente in numero vero
         chart_data['Delta'] = pd.to_numeric(chart_data['Delta'], errors='coerce')
         
-        # Eliminiamo eventuali righe dove il Delta è vuoto
+        # Eliminiamo righe vuote o con errori (es. scritte invece di numeri)
         chart_data = chart_data.dropna(subset=['Delta'])
         
-        # Disegniamo il grafico usando 'Data' come base (asse X)
-        st.area_chart(chart_data.set_index('Data'), use_container_width=True)
-        
-        st.caption("💡 Linea centrale (0) = Bilanciata. Sopra = Anteriore rigido, Sotto = Posteriore rigido.")
+        # Disegniamo il grafico
+        if not chart_data.empty:
+            st.area_chart(chart_data.set_index('Data'), use_container_width=True)
+            st.caption("💡 Sopra lo 0 = Ant più rigido | Sotto lo 0 = Post più rigido")
+        else:
+            st.warning("⚠️ I dati nella colonna Delta non sembrano numeri validi.")
     else:
-        st.warning(f"⚠️ Controllo colonne: Data -> {'✅' if 'Data' in df.columns else '❌'} | Delta -> {'✅' if 'Delta' in df.columns else '❌'}")
+        st.warning("⚠️ Colonne Data o Delta non trovate.")
 
 except Exception as e:
     # Questo ti mostrerà il messaggio standard, 
     # ma aggiungiamo 'e' per vedere l'errore tecnico se qualcosa va storto
     st.info(f"In attesa di dati per generare il grafico... (Info: {e})")
-
