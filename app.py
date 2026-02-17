@@ -72,8 +72,20 @@ try:
     # Streamlit aggiungerà automaticamente la barra di scorrimento.
     st.dataframe(df_visualizzazione, use_container_width=True, height=400)
     
-    # Grafico (manteniamo le ultime 10 per non affollare il disegno)
-    st.line_chart(df[['PSI - A', 'PSI - P']].tail(10))
+   # --- SEZIONE 3: GRAFICO BILANCIAMENTO ---
+    st.divider()
+    st.subheader("Analisi Bilanciamento (Delta)")
+    
+    # Prepariamo i dati per il grafico
+    # Usiamo la colonna Delta e come indice la DATA
+    if 'Delta' in df.columns and 'DATA' in df.columns:
+        chart_data = df[['DATA', 'Delta']].copy()
+        
+        # Creiamo un grafico ad area o linee
+        # Streamlit permette di scorrere e zoomare con le dita/mouse
+        st.area_chart(chart_data.set_index('DATA'), use_container_width=True)
+        
+        st.caption("💡 Se il grafico è vicino alla linea centrale (0), la bici è bilanciata. Punti in alto = Ant più rigido, Punti in basso = Post più rigido.")
     
 except Exception as e:
-    st.info("In attesa di dati o errore nel caricamento...")
+    st.info("In attesa di dati per generare il grafico...")
