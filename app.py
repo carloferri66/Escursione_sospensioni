@@ -51,24 +51,29 @@ if submit:
             st.error("❌ Errore durante il salvataggio. Verifica l'URL di scrittura.")
     except Exception as e:
         st.error(f"Errore di connessione: {e}")
-
 # --- SEZIONE 2: STORICO DATI ---
-st.subheader("Storico Registrazioni")
+st.subheader("Storico Registrazioni Completo")
 
-@st.cache_data(ttl=60) # Aggiorna i dati ogni minuto
+@st.cache_data(ttl=60)
 def carica_dati(url):
+    # Leggiamo tutto il file
     return pd.read_csv(url)
 
-# Nel file app.py, controlla solo la riga del grafico alla fine:
 try:
+    # Carichiamo i dati
     df = carica_dati(f"{URL_LETTURA}&nocache={pd.Timestamp.now().timestamp()}")
     
-    # Mostra i dati
-    st.dataframe(df.tail(10), use_container_width=True)
+    # 1. Ordiniamo i dati per mostrare i più recenti in alto (facoltativo ma comodo)
+    # Se la colonna si chiama DATA, mettiamo l'ultima inserita per prima
+    df_visualizzazione = df.iloc[::-1] 
     
-    # Se vuoi un grafico che mostri le pressioni rispetto alla data
-    if 'PSI - A' in df.columns and 'DATA' in df.columns:
-        st.line_chart(df.set_index('DATA')[['PSI - A', 'PSI - P']].tail(10))
-
+    # 2. Mostriamo la tabella COMPLETA
+    # Togliamo .tail(10) così carichiamo tutto. 
+    # Streamlit aggiungerà automaticamente la barra di scorrimento.
+    st.dataframe(df_visualizzazione, use_container_width=True, height=400)
+    
+    # Grafico (manteniamo le ultime 10 per non affollare il disegno)
+    st.line_chart(df[['PSI - A', 'PSI - P']].tail(10))
+    
 except Exception as e:
-    st.info("In attesa di nuovi dati...")
+    st.info("In attesa di dati o errore nel caricamento...")
