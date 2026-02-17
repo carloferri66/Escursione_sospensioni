@@ -18,7 +18,7 @@ with col1:
     st.image(URL_LOGO, width=120) 
 with col2:
     st.title("Registro Sospensioni Pro")
-    st.write("Configurazione personalizzata MyEbike")
+    st.write("Cannondale Scalpel Hi Mod 1 di Aziz")
 
 
 # --- SEZIONE 1: INSERIMENTO DATI (Sidebar) ---
@@ -100,6 +100,7 @@ try:
 
 except Exception as e:
     st.info(f"In attesa di dati... ({e})")
+
 
 
 
