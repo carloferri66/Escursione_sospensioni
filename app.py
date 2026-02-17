@@ -77,39 +77,46 @@ try:
     st.write("### Storico Dati")
     st.dataframe(df_filtrato.iloc[::-1], use_container_width=True, height=250)
 
-  # --- SEZIONE 3: GRAFICO CON DATE PUNTUALI ---
+  # --- SEZIONE 3: GRAFICO INTERATTIVO CON SCROLL ---
     st.write("### Evoluzione Bilanciamento (Delta)")
     if 'Delta' in df_filtrato.columns and 'Data' in df_filtrato.columns:
         
-        # Base del grafico: usiamo :O (Ordinale) o :T con formattazione specifica
-        # :O mostra ogni singola data come un'etichetta distinta
+        # Base del grafico
+        # Usiamo :T (temporale) per permettere lo scroll fluido nel tempo
         base = alt.Chart(df_filtrato).encode(
-            x=alt.X('Data:O', title='Data Registrazione', sort=None), 
+            x=alt.X('Data:T', title='Data (Scorri per vedere tutto lo storico)'),
             y=alt.Y('Delta:Q', title='Delta (Bilanciamento)')
         )
 
-        # 1. La linea che unisce i punti
+        # 1. La linea
         linea = base.mark_line(color="#888888", strokeWidth=1.5, opacity=0.7)
 
-        # 2. I punti colorati (Verde se OK, Rosso se fuori range)
+        # 2. I punti colorati
         punti = base.mark_circle(size=100, opacity=1).encode(
             color=alt.condition(
                 "abs(datum.Delta) <= 0.05",
-                alt.value("#29b09d"),  # Verde
-                alt.value("#ff4b4b")   # Rosso
+                alt.value("#29b09d"), # Verde
+                alt.value("#ff4b4b")  # Rosso
             ),
             tooltip=['Data', 'Delta', 'Tipo percorso', 'PSI - A', 'PSI - P']
         )
 
-        # 3. Linea di riferimento Zero
+        # 3. Linea dello zero
         zero_line = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='white', strokeDash=[3,3]).encode(y='y')
 
-        # Visualizzazione
-        st.altair_chart((linea + punti + zero_line).properties(height=350), use_container_width=True)
-        st.caption("📅 Il grafico mostra ogni singola data registrata nel tuo storico.")
+        # COMBINAZIONE E INTERATTIVITÀ
+        # .interactive() abilita lo scroll del mouse e il trascinamento (pan)
+        grafico_interattivo = (linea + punti + zero_line).properties(
+            height=350,
+            width=600 # Impostiamo una larghezza base che può essere superata con lo scroll
+        ).interactive(bind_y=False) # Permettiamo lo scroll solo sull'asse X (date)
+
+        st.altair_chart(grafico_interattivo, use_container_width=True)
+        st.caption("🖱️ **Mouse/Touch**: Usa la rotellina per zoomare e trascina per spostarti tra le date.")
 
 except Exception as e:
     st.info(f"In attesa di dati... ({e})")
+
 
 
 
