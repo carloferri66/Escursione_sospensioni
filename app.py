@@ -14,12 +14,12 @@ st.set_page_config(page_title="MTB Setup Pro", layout="centered", page_icon="ðŸš
 # --- LOGO E TITOLO ---
 col1, col2 = st.columns([1, 3])
 with col1:
-    try:
-        st.image(URL_LOGO, width=100)
-    except:
-        st.subheader("ðŸš² MyEbike")
+    # Mostriamo il TUO logo caricato su GitHub
+    st.image(URL_LOGO, width=120) 
 with col2:
     st.title("Registro Sospensioni Pro")
+    st.write("Configurazione personalizzata MyEbike")
+
 
 # --- SEZIONE 1: INSERIMENTO DATI (Sidebar) ---
 with st.sidebar:
@@ -100,4 +100,5 @@ try:
 
 except Exception as e:
     st.info(f"In attesa di dati... ({e})")
+
 
