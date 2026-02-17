@@ -72,35 +72,33 @@ try:
     # Streamlit aggiungerà automaticamente la barra di scorrimento.
     st.dataframe(df_visualizzazione, use_container_width=True, height=400)
     
-   # --- SEZIONE 3: GRAFICO BILANCIAMENTO ---
+# --- SEZIONE 3: GRAFICO BILANCIAMENTO ---
     st.divider()
     st.subheader("Analisi Bilanciamento (Delta)")
     
-    # Rendiamo i nomi delle colonne tutti minuscoli per non sbagliare
-    df.columns = [c.strip() for c in df.columns] # Toglie spazi vuoti rari
-    
-    # Cerchiamo la colonna Delta (provando sia maiuscolo che minuscolo)
-    colonna_delta = None
-    for nome in ['delta', 'Delta', 'DELTA']:
-        if nome in df.columns:
-            colonna_delta = nome
-            break
+    # Pulizia nomi colonne per sicurezza
+    df.columns = [c.strip() for c in df.columns]
             
-    if colonna_delta and 'DATA' in df.columns:
+    # Usiamo esattamente i nomi che abbiamo visto nel tuo errore
+    if 'Delta' in df.columns and 'Data' in df.columns:
         # Prepariamo i dati
-        chart_data = df[['DATA', colonna_delta]].copy()
+        chart_data = df[['Data', 'Delta']].copy()
         
-        # Trasformiamo la colonna in numeri (se per caso Google la invia come testo)
-        chart_data[colonna_delta] = pd.to_numeric(chart_data[colonna_delta], errors='coerce')
+        # Forziamo il Delta a essere un numero (importante!)
+        chart_data['Delta'] = pd.to_numeric(chart_data['Delta'], errors='coerce')
         
-        # Disegniamo il grafico
-        st.area_chart(chart_data.set_index('DATA'), use_container_width=True)
+        # Eliminiamo eventuali righe dove il Delta è vuoto
+        chart_data = chart_data.dropna(subset=['Delta'])
+        
+        # Disegniamo il grafico usando 'Data' come base (asse X)
+        st.area_chart(chart_data.set_index('Data'), use_container_width=True)
         
         st.caption("💡 Linea centrale (0) = Bilanciata. Sopra = Anteriore rigido, Sotto = Posteriore rigido.")
     else:
-        st.warning(f"⚠️ Non trovo la colonna 'delta' nel foglio. Colonne trovate: {list(df.columns)}")
+        st.warning(f"⚠️ Controllo colonne: Data -> {'✅' if 'Data' in df.columns else '❌'} | Delta -> {'✅' if 'Delta' in df.columns else '❌'}")
 
 except Exception as e:
     # Questo ti mostrerà il messaggio standard, 
     # ma aggiungiamo 'e' per vedere l'errore tecnico se qualcosa va storto
     st.info(f"In attesa di dati per generare il grafico... (Info: {e})")
+
