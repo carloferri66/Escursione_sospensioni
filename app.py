@@ -43,7 +43,7 @@ if salva:
     df_aggiornato = pd.concat([df, nuova_riga], ignore_index=True)
     
     # 4. AGGIORNAMENTO ONLINE: Questa riga salva i dati per sempre
-    conn.update(worksheet="120 - 210", data=df_aggiornato)
+    conn.update(worksheet="Dati", data=df_aggiornato)
     
     st.success(f"Dati salvati su Google Sheets! Setup: {bilancio}")
     st.balloons()
@@ -51,6 +51,7 @@ if salva:
 # 5. Visualizzazione (aggiornata in tempo reale)
 st.subheader("Storico Registrazioni (Cloud)")
 st.dataframe(df.tail(15), use_container_width=True)
+
 
 
 
