@@ -59,15 +59,16 @@ st.subheader("Storico Registrazioni")
 def carica_dati(url):
     return pd.read_csv(url)
 
+# Nel file app.py, controlla solo la riga del grafico alla fine:
 try:
-    # Aggiungiamo un parametro casuale all'URL per evitare che il browser mostri dati vecchi
     df = carica_dati(f"{URL_LETTURA}&nocache={pd.Timestamp.now().timestamp()}")
     
-    # Mostra le ultime 10 righe
+    # Mostra i dati
     st.dataframe(df.tail(10), use_container_width=True)
     
-    # Piccolo grafico di riepilogo per fare i fighi
-    st.line_chart(df[['PSI - A', 'PSI - P']].tail(10))
-    
+    # Se vuoi un grafico che mostri le pressioni rispetto alla data
+    if 'PSI - A' in df.columns and 'DATA' in df.columns:
+        st.line_chart(df.set_index('DATA')[['PSI - A', 'PSI - P']].tail(10))
+
 except Exception as e:
-    st.info("In attesa dei primi dati dal foglio Google...")
+    st.info("In attesa di nuovi dati...")
