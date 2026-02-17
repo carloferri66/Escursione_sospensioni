@@ -77,29 +77,40 @@ try:
     st.write("### Storico Dati")
     st.dataframe(df_filtrato.iloc[::-1], use_container_width=True, height=250)
 
-    # --- SEZIONE 3: GRAFICO ---
+  # --- SEZIONE 3: GRAFICO CON DATE PUNTUALI ---
     st.write("### Evoluzione Bilanciamento (Delta)")
     if 'Delta' in df_filtrato.columns and 'Data' in df_filtrato.columns:
+        
+        # Base del grafico: usiamo :O (Ordinale) o :T con formattazione specifica
+        # :O mostra ogni singola data come un'etichetta distinta
         base = alt.Chart(df_filtrato).encode(
-            x=alt.X('Data:T', title='Data Uscita'),
+            x=alt.X('Data:O', title='Data Registrazione', sort=None), 
             y=alt.Y('Delta:Q', title='Delta (Bilanciamento)')
         )
+
+        # 1. La linea che unisce i punti
         linea = base.mark_line(color="#888888", strokeWidth=1.5, opacity=0.7)
+
+        # 2. I punti colorati (Verde se OK, Rosso se fuori range)
         punti = base.mark_circle(size=100, opacity=1).encode(
             color=alt.condition(
                 "abs(datum.Delta) <= 0.05",
                 alt.value("#29b09d"),  # Verde
                 alt.value("#ff4b4b")   # Rosso
             ),
-            tooltip=['Data', 'Delta', 'Tipo percorso']
+            tooltip=['Data', 'Delta', 'Tipo percorso', 'PSI - A', 'PSI - P']
         )
+
+        # 3. Linea di riferimento Zero
         zero_line = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='white', strokeDash=[3,3]).encode(y='y')
-        
+
+        # Visualizzazione
         st.altair_chart((linea + punti + zero_line).properties(height=350), use_container_width=True)
-        st.caption("📈 Punti verdi: setup bilanciato | Punti rossi: setup da correggere.")
+        st.caption("📅 Il grafico mostra ogni singola data registrata nel tuo storico.")
 
 except Exception as e:
     st.info(f"In attesa di dati... ({e})")
+
 
 
 
