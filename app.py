@@ -90,20 +90,49 @@ try:
         st.write("### Storico")
         st.dataframe(df_filtrato.iloc[::-1], use_container_width=True, height=200)
 
-        # Grafico
+
+        
+      # --- 5. VISUALIZZAZIONE GRAFICA (Sostituisci da qui) ---
         if 'Delta' in df_filtrato.columns and 'Data' in df_filtrato.columns:
-            base = alt.Chart(df_filtrato).encode(x='Data:T', y='Delta:Q')
-            linea = base.mark_line(color="#888888")
-            punti = base.mark_circle(size=100).encode(
-                color=alt.condition("abs(datum.Delta) <= 0.05", alt.value("#29b09d"), alt.value("#ff4b4b")),
+            st.write("### Analisi Grafica Delta")
+            
+            # Creazione del grafico con date puntuali (:O)
+            base = alt.Chart(df_filtrato).encode(
+                x=alt.X('Data:O', 
+                        title='Data Registrazione', 
+                        sort=None,
+                        axis=alt.Axis(labelAngle=-45)), # Ruota le date di 45° per leggerle meglio
+                y=alt.Y('Delta:Q', 
+                        title='Valore Delta', 
+                        scale=alt.Scale(zero=True))
+            )
+            
+            # Linea grigia di collegamento
+            linea = base.mark_line(color="#888888", strokeWidth=2, opacity=0.6)
+            
+            # Punti colorati (Semaforo)
+            punti = base.mark_circle(size=120, opacity=1).encode(
+                color=alt.condition(
+                    "abs(datum.Delta) <= 0.05", 
+                    alt.value("#29b09d"), # Verde
+                    alt.value("#ff4b4b")  # Rosso
+                ),
                 tooltip=['Data', 'Delta', 'Tipo percorso']
             )
-            st.altair_chart((linea + punti).properties(height=350).interactive(bind_y=False), use_container_width=True)
+            
+            # Linea orizzontale dello zero
+            zero_line = alt.Chart(pd.DataFrame({'y': [0]})).mark_rule(color='white', strokeDash=[4,4]).encode(y='y')
+            
+            # Unione dei componenti e attivazione interattività
+            grafico_finale = (linea + punti + zero_line).properties(
+                height=400
+            ).interactive(bind_y=False)
+            
+            st.altair_chart(grafico_finale, use_container_width=True)
+            st.caption("📅 Ogni punto rappresenta un'uscita reale dal tuo foglio Google.")
     else:
         st.warning("Nessun dato trovato nel foglio.")
 
 except Exception as e:
     st.info(f"Connessione in corso... ({e})")
-
-
-
+# --- FINE DEL FILE ---
