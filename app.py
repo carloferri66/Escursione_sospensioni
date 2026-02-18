@@ -45,6 +45,38 @@ if submit:
             st.cache_data.clear()
         else: st.error("❌ Errore scrittura")
     except Exception as e: st.error(f"Errore invio: {e}")
+# --- AGGIUNTA NELLA SIDEBAR: CANCELLAZIONE ---
+st.sidebar.divider()
+st.sidebar.subheader("Gestione Errori")
+if st.sidebar.button("🗑️ CANCELLA ULTIMA RIGA"):
+    # Carichiamo i dati correnti
+    try:
+        # Recuperiamo il DataFrame originale (senza filtri)
+        df_temp = carica_dati(URL_LETTURA)
+        
+        if not df_temp.empty:
+            # Rimuoviamo l'ultima riga
+            df_nuovo = df_temp.drop(df_temp.index[-1])
+            
+            # Qui abbiamo bisogno di un comando per dire a Google di cancellare.
+            # Dato che usiamo Apps Script per scrivere, il modo più semplice 
+            # è aggiungere un payload speciale al tuo script esistente.
+            
+            payload_delete = {"delete_last": "true"}
+            r = requests.get(URL_SCRITTURA, params=payload_delete)
+            
+            if r.status_code == 200:
+                st.sidebar.success("Ultima riga rimossa!")
+                st.cache_data.clear() # Svuota la cache per aggiornare subito tabella e grafico
+                st.rerun() # Riavvia l'app per mostrare i dati aggiornati
+            else:
+                st.sidebar.error("Errore durante la cancellazione.")
+        else:
+            st.sidebar.warning("Il foglio è già vuoto.")
+    except Exception as e:
+        st.sidebar.error(f"Errore: {e}")
+
+
 
 # --- SEZIONE 2: FILTRO E CARICAMENTO ---
 @st.cache_data(ttl=60)
@@ -115,44 +147,6 @@ try:
         st.caption("🖱️ **Mouse/Touch**: Usa la rotellina per zoomare e trascina per spostarti tra le date.")
 
 
-# ---SEZIONE 4  AGGIUNTA NELLA SIDEBAR: CANCELLAZIONE ---
-st.sidebar.divider()
-st.sidebar.subheader("Gestione Errori")
-if st.sidebar.button("🗑️ CANCELLA ULTIMA RIGA"):
-    # Carichiamo i dati correnti
-    try:
-        # Recuperiamo il DataFrame originale (senza filtri)
-        df_temp = carica_dati(URL_LETTURA)
-        
-        if not df_temp.empty:
-            # Rimuoviamo l'ultima riga
-            df_nuovo = df_temp.drop(df_temp.index[-1])
-            
-            # Qui abbiamo bisogno di un comando per dire a Google di cancellare.
-            # Dato che usiamo Apps Script per scrivere, il modo più semplice 
-            # è aggiungere un payload speciale al tuo script esistente.
-            
-            payload_delete = {"delete_last": "true"}
-            r = requests.get(URL_SCRITTURA, params=payload_delete)
-            
-            if r.status_code == 200:
-                st.sidebar.success("Ultima riga rimossa!")
-                st.cache_data.clear() # Svuota la cache per aggiornare subito tabella e grafico
-                st.rerun() # Riavvia l'app per mostrare i dati aggiornati
-            else:
-                st.sidebar.error("Errore durante la cancellazione.")
-        else:
-            st.sidebar.warning("Il foglio è già vuoto.")
-    except Exception as e:
-        st.sidebar.error(f"Errore: {e}")
-
 
 except Exception as e:
     st.info(f"In attesa di dati... ({e})")
-
-
-
-
-
-
-
