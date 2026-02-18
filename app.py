@@ -9,7 +9,7 @@ from io import StringIO
 # --- 1. CONFIGURAZIONE ---
 # Inserisci l'ID che trovi tra /d/ e /edit nell'indirizzo del tuo foglio Google
 ID_FOGLIO = "14VvmeQ_U8ka6SeQdbwJ98u_Squ4ENdQngSRph6PkaVQ" 
-URL_LETTURA = f"https://docs.google.com/spreadsheets/d/{ID_FOGLIO}/export?format=csv&gid=0"
+URL_LETTURA = f"https://docs.google.com/spreadsheets/d/{ID_FOGLIO}/export?format=csv"
 URL_SCRITTURA = "https://script.google.com/macros/s/AKfycbwNMG9zi-evudSuDwy0qCg44pG0smv1A7eDgEXrFDA7lSTz5vyULtkCroQcKV1xschvKQ/exec"
 URL_LOGO = "https://github.com/carloferri66/Escursione_sospensioni/blob/main/LOGO%20.jpg?raw=true" 
 
@@ -104,5 +104,6 @@ try:
 
 except Exception as e:
     st.info(f"Connessione in corso... ({e})")
+
 
 
