@@ -71,7 +71,7 @@ with st.sidebar:
             r = requests.get(URL_SCRITTURA, params=payload)
             if r.status_code == 200:
                 st.success("✅ Inviato!")
-                time.sleep(2) # Pausa per dare tempo a Google di scrivere
+                time.sleep(1.5) # Pausa per dare tempo a Google di scrivere
                 st.rerun()
         except Exception as e: st.error(f"Errore: {e}")
 
@@ -81,7 +81,7 @@ with st.sidebar:
             r = requests.get(URL_SCRITTURA, params={"delete_last": "true"})
             if r.status_code == 200:
                 st.warning("⚠️ Cancellata!")
-                time.sleep(2)
+                time.sleep(1.5)
                 st.rerun()
         except Exception as e: st.error(f"Errore: {e}")
 
@@ -116,3 +116,4 @@ try:
 
 except Exception as e:
     st.info(f"Connessione in corso... ({e})")
+
