@@ -3,19 +3,7 @@ import pandas as pd
 import requests
 import altair as alt
 import time
-
-# --- CONFIGURAZIONE ---
-URL_LETTURA = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTFgpcODvT-wUcvQX4zVWe_8GtDbpPL8DL3wbc-KPObAJZmgdc5vwpNT694VZGi4LY8iIhJD4YIqWWd/pub?output=csv"
-URL_SCRITTURA = "https://script.google.com/macros/s/AKfycbwNMG9zi-evudSuDwy0qCg44pG0smv1A7eDgEXrFDA7lSTz5vyULtkCroQcKV1xschvKQ/exec"
-URL_LOGO = "https://github.com/carloferri66/Escursione_sospensioni/blob/main/LOGO%20.jpg?raw=true"
-
-
-st.set_page_config(page_title="MTB Setup Pro", layout="centered", page_icon="🚵‍♂️💨")
-import streamlit as st
-import pandas as pd
-import requests
-import altair as alt
-import time
+import random
 from io import StringIO
 
 # --- 1. CONFIGURAZIONE ---
@@ -116,4 +104,5 @@ try:
 
 except Exception as e:
     st.info(f"Connessione in corso... ({e})")
+
 
