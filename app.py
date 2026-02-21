@@ -50,8 +50,8 @@ with st.sidebar:
         submit = st.form_submit_button("SALVA SUL CLOUD")
 
     if submit:
-        p_ant = round(ant / 100, 2)
-        p_post = round(post / 40, 2)
+        p_ant = round((ant / 100) * 100, 2)
+        p_post = round((post / 40) * 100, 2)
         delta = round(p_ant - p_post, 3)
         bilancio = "OK" if abs(delta) <= 0.05 else ("ANT" if delta > 0 else "POST")
         payload = {"tipo": tipo, "ant": ant, "p_ant": p_ant, "post": post, "p_post": p_post, "delta": delta, "bilancio": bilancio, "psi_a": psi_a, "psi_p": psi_p}
@@ -136,3 +136,4 @@ try:
 except Exception as e:
     st.info(f"Connessione in corso... ({e})")
 # --- FINE DEL FILE ---
+
