@@ -11,5 +11,4 @@ jobs:
     steps:
       - name: Ping Streamlit App
         run: |
-          # Usa -L per seguire i reindirizzamenti e --retry per insistere
-          curl -L --retry 3 --retry-delay 10 --max-time 30 https://escursionesospensioni.streamlit.app
+          curl -s -o /dev/null -w "%{http_code}" https://escursionesospensioni.streamlit.app
