@@ -6,7 +6,9 @@ import time
 import random
 from io import StringIO
 
-import streamlit as st
+
+# Ottimizzazione: Forza il caricamento leggero dei componenti
+st.cache_data.clear()
 
 # Questo aiuta a mantenere la sessione attiva finché la pagina è aperta sul browser
 st.set_page_config(page_title="Il tuo Titolo", page_icon="🚲")
@@ -144,5 +146,6 @@ try:
 except Exception as e:
     st.info(f"Connessione in corso... ({e})")
 # --- FINE DEL FILE ---
+
 
 
