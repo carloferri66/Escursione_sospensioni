@@ -6,6 +6,14 @@ import time
 import random
 from io import StringIO
 
+import streamlit as st
+
+# Questo aiuta a mantenere la sessione attiva finché la pagina è aperta sul browser
+st.set_page_config(page_title="Il tuo Titolo", page_icon="🚲")
+
+if "keep_awake" not in st.session_state:
+    st.session_state["keep_awake"] = True
+
 # --- 1. CONFIGURAZIONE ---
 # Inserisci l'ID che trovi tra /d/ e /edit nell'indirizzo del tuo foglio Google
 ID_FOGLIO = "14VvmeQ_U8ka6SeQdbwJ98u_Squ4ENdQngSRph6PkaVQ" 
@@ -136,4 +144,5 @@ try:
 except Exception as e:
     st.info(f"Connessione in corso... ({e})")
 # --- FINE DEL FILE ---
+
 
