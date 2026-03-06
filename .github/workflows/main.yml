@@ -1,0 +1,12 @@
+name: Sveglia App
+on:
+  schedule:
+    - cron: '0 7 * * *' # Gira ogni mattina alle 7:00 UTC
+  workflow_dispatch: # Permette di avviarlo a mano
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sveglia Streamlit
+        run: curl -L https://tuo-link-app.streamlit.app/
