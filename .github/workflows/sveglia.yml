@@ -1,0 +1,14 @@
+name: Sveglia Mattutina App
+on:
+  schedule:
+    # L'orario è in formato UTC. 06:00 UTC sono le 07:00 in Italia.
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Questo ti permette di testarlo a mano con un tasto
+
+jobs:
+  sveglia:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inviando segnale di risveglio
+        run: |
+          curl -L "https://escursione-sospensioni.streamlit.app/"
