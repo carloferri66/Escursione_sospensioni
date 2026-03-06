@@ -6,6 +6,8 @@ import time
 import random
 from io import StringIO
 
+# Forza Streamlit a considerare l'app come prioritaria
+st.sidebar.caption("⚡ Sistema di Risveglio Attivo")
 
 # Ottimizzazione: Forza il caricamento leggero dei componenti
 st.cache_data.clear()
@@ -146,6 +148,7 @@ try:
 except Exception as e:
     st.info(f"Connessione in corso... ({e})")
 # --- FINE DEL FILE ---
+
 
 
 
